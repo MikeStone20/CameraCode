@@ -52,9 +52,9 @@ class CameraSys(QtWidgets.QMainWindow):
 
         # Open camera
         # Program will carry on even if there is no camera detected
-        self.cam = Camera()
+        self.cam = Camera(1)
         
-        self.cam_2 = Camera_2()
+        self.cam_2 = Camera(2)
 
         # Local instance of the new values
         self.cameraGain = self.cam.gain
@@ -63,6 +63,13 @@ class CameraSys(QtWidgets.QMainWindow):
         self.cameraFocus = self.cam.focus
         self.cameraBrightness = self.cam.brightness
         self.cameraExposure = self.cam.exposure
+
+        self.cameraGain_2 = self.cam_2.gain
+        self.cameraHue_2 = self.cam_2.hue
+        self.cameraContrast_2 = self.cam_2.contrast
+        self.cameraFocus_2 = self.cam_2.focus
+        self.cameraBrightness_2 = self.cam_2.brightness
+        self.cameraExposure_2 = self.cam_2.exposure
 
         # Threads
         # Camera thread control
@@ -74,7 +81,7 @@ class CameraSys(QtWidgets.QMainWindow):
         self.videoFrame = None
         
         #Cam 2 thread 
-        self.cameraThread_2 = Thread(group = None, target = self.capture_2, name = "Camera System 2, Camera")
+        self.cameraThread_2 = Thread(group = None, target = self.capture_2, name = "Camera System, Camera")
         self.cameraThreadKiller_2 = Event()
         self.cameraLock_2 = RLock()
         
@@ -110,22 +117,23 @@ class CameraSys(QtWidgets.QMainWindow):
         self.savePath = Constant.FILE_PREFIX
 
         # Bond interaction needs to be called at last.
-        #self.bondInteraction()
+        self.bondInteraction()
         #self.updateUI()
 
-    """def bondInteraction(self):
+    def bondInteraction(self):
         # Bonding push buttons
         if not self.isArduinoReady :
             self.ui.pbLight.setEnabled(False)
         else :
             self.ui.pbLight.setCheckable(True)
-            self.ui.pbLight.clicked.connect(self.switchLED)
-        self.ui.pbClickToApply.clicked.connect(self.updateCameraParam)
-        self.ui.pbClickToApply.setEnabled(True)
+        #self.ui.pbLight.clicked.connect(self.switchLED)
+        self.ui.cameraSettings_1.clicked.connect(self.updateCameraParam)
+        self.ui.cameraSettings_2.clicked.connect(self.updateCameraParam2)
+        
 
          # Bonding line edits
        
-        self.ui.leFocus.editingFinished.connect(self.updateLineFocus)
+        """self.ui.leFocus.editingFinished.connect(self.updateLineFocus)
         self.ui.leBrightness.editingFinished.connect(self.updateLineBrightness)
         self.ui.leHue.editingFinished.connect(self.updateLineHue)
         self.ui.leContrast.editingFinished.connect(self.updateLineContrast)
@@ -149,19 +157,18 @@ class CameraSys(QtWidgets.QMainWindow):
         self.cam.exposure = self.cameraExposure
         self.cam.gain = self.cameraGain
         self.cam.loadCameraDynParam()
-        self.ui.pbClickToApply.setEnabled(True)
-        self.updateUI()
+        #self.updateUI()
         
     def updateCameraParam2(self):
-        self.cam2.focus = self.cameraFocus
-        self.cam2.brightness = self.cameraBrightness
-        self.cam2.hue = self.cameraHue
-        self.cam2.contrast = self.cameraContrast
-        self.cam2.exposure = self.cameraExposure
-        self.cam2.gain = self.cameraGain
-        self.cam2.loadCameraDynParam()
-        self.ui.pbClickToApply.setEnabled(True)
-        self.updateUI()
+        self.cam_2.focus = self.cameraFocus_2
+        self.cam_2.brightness = self.cameraBrightness_2
+        self.cam_2.hue = self.cameraHue_2
+        self.cam_2.contrast = self.cameraContrast_2
+        self.cam_2.exposure = self.cameraExposure_2
+        self.cam_2.gain = self.cameraGain_2
+        self.cam_2.loadCameraDynParam()
+        #self.ui.pbClickToApply.setEnabled(True)
+        #self.updateUI()
         
 
     # Group functions for line edits
@@ -218,9 +225,27 @@ class CameraSys(QtWidgets.QMainWindow):
             self.cameraThread.start()
         except RuntimeError as e :
             print("Runtime Error: ({0}): {1}".format(e.errno, e.strerror))
-
+            
+    #Camera Thread Start for Camera 2
+    def startCameraThread_2(self):
+        if not self.cameraThread_2.isAlive():
+            if not self.cam_2.isCameraOpened():
+                self.cam_2.openCamera()
+            self.cameraThread_2 = Thread(group = None, target = self.capture_2, name = "Camera System, Camera2")
+        
+        try:
+            self.cameraThread_2.start()
+        except RuntimeError as e:
+            print("Runtime Error: ({0}): {1}".format(e.errno, e.strerror))
+    
+    
+    # Stop Camera Thread
     def stopCameraThread(self):
         self.cameraThreadKiller.set()
+    
+    # Stop Camera Thread 2
+    def stopCameraThread_2(self):
+        self.cameraThreadKiller_2.set()
 
     # Capture thread function
     def capture(self):
@@ -233,6 +258,19 @@ class CameraSys(QtWidgets.QMainWindow):
 
         self.cam.release()
         self.cameraThreadKiller.clear()
+        
+    # Capture Thread function 2    
+    def capture_2(self):
+        while not self.cameraThreadKiller_2.wait(0.001):
+            self.cameraLock_2.acquire()
+            self.frame_2 = self.cam_2.captureOnce()
+            self.videoFrame_2 = cv2.resize(self.frame_2,self.displaySize)
+            self.cameraLock_2.release()
+            self.displayUpdater.set()
+        
+        self.cam_2.release()
+        self.cameraThreadKiller_2.clear()
+            
 
     # Display control functions
     def startDisplay(self):
@@ -240,7 +278,9 @@ class CameraSys(QtWidgets.QMainWindow):
             self.displayTimer.stop()
         self.displayTimer.setInterval(0.001)
         self.displayTimer.setSingleShot(False)
+        self.displayTimer.timeout.connect(self.display_2)
         self.displayTimer.timeout.connect(self.display)
+        
         self.displayTimer.start()
 
     def display(self) :
@@ -249,6 +289,13 @@ class CameraSys(QtWidgets.QMainWindow):
             self.ui.cviCamera.render(self.videoFrame)
             self.displayUpdater.clear()
             self.cameraLock.release()
+            
+    def display_2(self) :
+        if self.displayUpdater.isSet() :
+            self.cameraLock_2.acquire()
+            self.ui.cviCamera_2.render(self.videoFrame_2)
+            self.displayUpdater.clear()
+            self.cameraLock_2.release()
 
     # Picture saving function
     def startSavingPicture(self) :
@@ -273,9 +320,13 @@ class CameraSys(QtWidgets.QMainWindow):
                     filename = self.savePath + '\\' + datetime.now().strftime('%m%d%yD%HH%MM') + '.png'
                     print("Saving capture to file" + filename)
                     self.cameraLock.acquire()
+                    self.cameraLock_2.acquire()
                     cv2.imwrite(filename, self.frame, [cv2.IMWRITE_PNG_COMPRESSION, Constant.PNG_COMPRESSION_LEVEL])
+                    cv2.imwrite(filename, self.frame_2, [cv2.IMWRITE_PNG_COMPRESSION, Constant.PNG_COMPRESSION_LEVEL])
                     self.ui.cviPhoto.render(self.videoFrame)
+                    self.ui.cviPhoto_2.render(self.videoFrame_2)
                     self.cameraLock.release()
+                    self.cameraLock_2.release()
                     self.lastShotTime = timeNow
                     if self.isArduinoReady :
                         self.arduino.turnOffLED()
@@ -298,6 +349,7 @@ class CameraSys(QtWidgets.QMainWindow):
     # Overriden close event
     def closeEvent(self, event) :
         self.stopCameraThread()
+        self.stopCameraThread_2()
         if self.isArduinoReady :
             self.arduino.disconnect()
         print("Closing event accepted")
@@ -306,67 +358,6 @@ class CameraSys(QtWidgets.QMainWindow):
         
     #Camera 2 Control functions
 
-    def startCameraThread_2(self):
-        if not self.cameraThread_2.isAlive() :
-            if not self.cam_2.isCameraOpened_2() :
-                self.cam_2.openCamera_2()
-            self.cameraThread_2 = Thread(group = None, target = self.capture_2, name = "Camera System 2, Camera")
-
-        try :
-            self.cameraThread_2.start()
-        except RuntimeError as e :
-            print("Runtime Error: ({0}): {1}".format(e.errno, e.strerror))
-    
-    def stopCameraThread_2(self):
-        self.cameraThreadKiller_2.set()
-    
-    def capture_2(self):
-        while not self.cameraThreadKiller_2.wait(0.001) :
-            self.cameraLock_2.acquire()
-            self.frame_2 = self.cam_2.captureOnce_2()
-            self.videoFrame_2 = cv2.resize(self.frame_2, self.displaySize)
-            self.cameraLock_2.release()
-            self.displayUpdater.set()
-
-        self.cam_2.release()
-        self.cameraThreadKiller_2.clear()
-    
-    def startDisplay_2(self):
-        if self.displayTimer.isActive() :
-            self.displayTimer.stop()
-        self.displayTimer.setInterval(0.001)
-        self.displayTimer.setSingleShot(False)
-        self.displayTimer.timeout.connect(self.display)
-        self.displayTimer.start()
-
-    def display_2(self) :
-        if self.displayUpdater.isSet() :
-            self.cameraLock_2.acquire()
-            self.ui.cviCamera.render(self.videoFrame)
-            self.displayUpdater.clear()
-            self.cameraLock_2.release()
-            
-        def savePicture_2(self):
-            if self.displayUpdater.isSet() :
-                if self.savePictureStartUpFlag :
-                    self.lastShotTime = time.time()
-                else :
-                    timeNow = time.time()
-                    if ( timeNow - self.lastShotTime ) > self.ledOnTime and not self.isLEDOn:
-                        if self.isArduinoReady :
-                            self.arduino.turnOnLED()
-                            self.isLEDOn = True
-                    elif ( timeNow - self.lastShotTime ) > self.pictureSavingInterval :
-                        filename = self.savePath + '\\' + datetime.now().strftime('%m%d%yD%HH%MM') + '.png'
-                        print("Saving capture to file" + filename)
-                        self.cameraLock_2.acquire()
-                        cv2.imwrite(filename, self.frame, [cv2.IMWRITE_PNG_COMPRESSION, Constant.PNG_COMPRESSION_LEVEL])
-                        self.ui.cviPhoto_2.render(self.videoFrame)
-                        self.cameraLock_2.release()
-                        self.lastShotTime = timeNow
-                        if self.isArduinoReady :
-                            self.arduino.turnOffLED()
-                            self.isLEDOn = False
     
     
         

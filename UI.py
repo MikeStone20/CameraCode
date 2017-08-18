@@ -8,10 +8,12 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import Constant
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(2400, 1800)
+        MainWindow.resize(1000, 800)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
@@ -82,9 +84,36 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(205, 200, 10, 200)
         self.verticalLayout.setObjectName("verticalLayout")
         
-        #self.pbLight = QtWidgets.QPushButton(self.controlPanel)
-        #self.pbLight.setObjectName("pbLight")
-        #self.verticalLayout_2.addWidget(self.pbLight)
+        self.cameraSettings_1 = QtWidgets.QPushButton(self.controlPanel)
+        self.cameraSettings_1.setObjectName("cameraSettings_1")
+        self.cameraSettings_2 = QtWidgets.QPushButton(self.controlPanel)
+        self.cameraSettings_2.setObjectName("cameraSettings_2")
+        
+        self.saveLocation_1 = QtWidgets.QLabel(str(Constant.FILE_PREFIX))
+        
+        self.saveLocation_2 = QtWidgets.QLabel(str(Constant.FILE_PREFIX))
+        
+        self.pbLight = QtWidgets.QPushButton(self.controlPanel)
+        self.pbLight.setObjectName("pbLight")
+      
+        
+        self.verticalLayout_settings = QtWidgets.QVBoxLayout(self.controlPanel)
+        
+        self.verticalLayout_save = QtWidgets.QVBoxLayout(self.controlPanel)
+        
+        self.verticalLayout_settings.addWidget(self.cameraSettings_1)
+        self.verticalLayout_settings.addWidget(self.cameraSettings_2)
+        
+        
+        self.verticalLayout.addWidget(self.saveLocation_1)
+        self.verticalLayout.addWidget(self.saveLocation_2)
+        
+        self.verticalLayout_settings.addWidget(self.pbLight)
+        
+        
+        self.horizontalLayout.addLayout(self.verticalLayout_settings)
+        self.horizontalLayout.addLayout(self.verticalLayout_save)
+        
         self.horizontalLayout.addWidget(self.controlPanel)
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
@@ -94,6 +123,9 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.cameraSettings_1.setText(_translate("MainWindow", "Change Camera 1"))
+        self.cameraSettings_2.setText(_translate("MainWindow", "Change Camera 2"))
+        self.pbLight.setText(_translate("MainWindow", "Turn on light"))
         #self.lCameraSettings.setText(_translate("MainWindow", "Camera Settings"))
         #self.pbClickToApply.setText(_translate("MainWindow", "Change Camera Setting"))
         #self.lFocus.setText(_translate("MainWindow", "Focus"))
@@ -106,7 +138,7 @@ class Ui_MainWindow(object):
         #self.pbBrowse.setText(_translate("MainWindow", "Browse"))
         #self.lSavingInterval.setText(_translate("MainWindow", "Saving Interval :"))
         #self.lTimeUntil.setText(_translate("MainWindow", "Time until next picture :"))
-        #self.pbLight.setText(_translate("MainWindow", "Turn on light"))
+        
         #self.pbSaveDefault.setText(_translate("MainWindow", "Save current settings as default"))
         #self.pbExit.setText(_translate("MainWindow", "Exit"))
       

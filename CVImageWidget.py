@@ -14,3 +14,5 @@ class CVImageWidget(QtOpenGL.QGLWidget):
         painter.begin(self)
         painter.drawImage(0, 0, image)
         painter.end()
+    
+   

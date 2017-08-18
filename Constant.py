@@ -6,9 +6,9 @@
 # The ID of the web-cam used.
 # If used in a labtop with a built-in web-cam, this number is likely to be 1 instead of 0
 # But how the system assign these numbers remain a mistery to me
-CAMERA_ID = 0
+CAMERA_ID = 2
 
-CAMERA_ID2 = 2
+CAMERA_ID2 = 0
 
 # This is the default interval of taking pictures
 DEFAULT_SAVE_INTERVAL = 15*60
@@ -17,6 +17,7 @@ DEFAULT_LED_OFF_TIME = DEFAULT_SAVE_INTERVAL + 1
 
 # The default position of saving the images as well as the file name prefix
 FILE_PREFIX = "C:\\Users\Michael\Desktop\pics"
+FILE_PREFIX_2 = "C:\\Users\Michael\Desktop\pics"
 
 # The output picture compression level. 0 means no compression, 9 means maximum compression
 PNG_COMPRESSION_LEVEL = 5

@@ -44,15 +44,15 @@ import Constant
     #   CAP_PROP_AUTOFOCUS     =39
 
 class Camera(object):
-    def __init__(self) :
-        self.openCamera()
+    def __init__(self, CameraID) :
+        self.openCamera(CameraID)
         
 
     def isCameraOpened(self) :
         return self.capture.isOpened()
 
-    def openCamera(self) :
-        self.capture = cv2.VideoCapture(Constant.CAMERA_ID)
+    def openCamera(self,ID) :
+        self.capture = cv2.VideoCapture(ID)
         if not self.capture.isOpened():
             print("Camera not configured properly")
             return None
